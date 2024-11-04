@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrar Productos</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.13/jspdf.plugin.autotable.min.js"></script>
+
+<!-- Bootstrap CSS -->
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'EB Garamond', serif;
+            background-color: #F8F1E5; /* Color beige claro */
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar {
+            background-color: #DCA90E; /* Color amarillo oscuro */
+            padding: 20px;
+            height: 100vh;
+            position: fixed;
+            width: 220px; /* Aumentado para mejor separación */
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar a {
+            color: #4C3B2F; /* Color café oscuro */
+            display: block;
+            padding: 10px;
+            text-decoration: none;
+            font-size: 1.1rem;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            margin-bottom: 10px; /* Separación entre enlaces */
+        }
+        .sidebar a:hover {
+            background-color: #B98B2C; /* Color amarillo más claro */
+        }
+        .content {
+            margin-left: 240px;
+            padding: 20px;
+        }
+        .header {
+            background-color: #DCA90E; /* Color amarillo oscuro */
+            color: #4C3B2F; /* Color café oscuro */
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2rem;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            color: #4C3B2F; /* Color café oscuro */
+        }
+        .user-info img {
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            margin-right: 15px;
+        }
+        .user-info div {
+            text-align: right;
+        }
+        .modal-content {
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <a href="/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        <a href="/usuarios"><i class="fas fa-user-cog"></i> Usuarios</a>
+        <a href="/cliente"><i class="fas fa-user-cog"></i> Cliente</a>
+        <a href="/inventario"><i class="fas fa-boxes"></i> Productos</a>
+        <a href="/materia-prima"><i class="fas fa-file-alt"></i> Inventario de materia prima</a> <!-- Ícono actualizado -->
+        <a href="/ventas"><i class="fas fa-shopping-cart"></i> Ventas</a>
+        <a href="/cerrar-sesion"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+
+    </div>
+    <div class="content">
+        <div class="header">
+            <h1>Panadería "Very Nice"</h1>
+            <div class="user-info">
+                <img src="/css/imagenes/logo.jpg" alt="Foto de perfil"> <!-- Cambia la ruta de la imagen por la foto del usuario -->
+                <div>
+                    <p><strong>Nombre del Usuario</strong></p> <!-- Reemplaza con el nombre del usuario -->
+                    <p><em>Rol del Usuario</em></p> <!-- Reemplaza con el rol del usuario -->
+                </div>
+            </div>
+        </div>
+        <div class="container mt-4">
+            <h1>Ventas</h1>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#registerSaleModal">
+                Registrar Venta
+            </button>
+            <button onclick="generarReporte()">Generar Reporte</button>
+    
+            <div class="table-responsive">
+                <table class="table" id="salesTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Producto</th>
+                            <th>Cliente</th>
+                            <th>Cantidad</th>
+                            <th>Precio Unitario</th>
+                            <th>Fecha de Venta</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="salesTableBody">
+                        <!-- Las filas de ventas se agregarán aquí dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+            
+            </div>
+        
+            <!-- Modal para registrar venta -->
+            <!-- Modal para registrar venta -->
+<!-- Modal para registrar venta -->
+<div class="modal fade" id="registerSaleModal" tabindex="-1" aria-labelledby="registerSaleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="registerSaleModalLabel">Registrar Venta</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="registerSaleForm">
+                    <div class="form-group">
+                        <label for="cliente_id">Cliente</label>
+                        <select id="cliente_id" class="form-control" required>
+                            <option value="">Selecciona un cliente</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="producto_id">Producto</label>
+                        <select id="producto_id" class="form-control" required>
+                            <option value="">Selecciona un producto</option>
+                        </select>
+                    </div>                    
+                    <div class="form-group">
+                        <label for="cantidad">Cantidad</label>
+                        <input type="number" class="form-control" id="cantidad" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="precio_unitario">Precio Unitario</label>
+                        <input type="number" class="form-control" id="precio_unitario" step="0.01" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                <button type="button" id="saveSaleButton" class="btn btn-primary">Registrar Venta</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Editar Venta -->
+<div class="modal fade" id="editSaleModal" tabindex="-1" role="dialog" aria-labelledby="editSaleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editSaleModalLabel">Editar Venta</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editSaleForm">
+                    <input type="hidden" id="editSaleId">
+                    <div class="form-group">
+                        <label for="editProductoId">Producto ID</label>
+                        <input type="text" class="form-control" id="editProductoId" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editClienteId">Cliente ID</label>
+                        <input type="text" class="form-control" id="editClienteId" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editCantidad">Cantidad</label>
+                        <input type="number" class="form-control" id="editCantidad" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editPrecioUnitario">Precio Unitario</label>
+                        <input type="text" class="form-control" id="editPrecioUnitario" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editFechaVenta">Fecha de Venta</label>
+                        <input type="date" class="form-control" id="editFechaVenta" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" id="saveEditButton">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal para Confirmar Eliminación -->
+<div class="modal fade" id="deleteSaleModal" tabindex="-1" role="dialog" aria-labelledby="deleteSaleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteSaleModalLabel">Eliminar Venta</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar esta venta?</p>
+                <input type="hidden" id="deleteSaleId">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteButton">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+            <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+            <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.21/jspdf.plugin.autotable.min.js"></script>
+
+            
+            <script>
+               // Lógica para cargar clientes y productos en los selects al abrir el modal
+$('#registerSaleModal').on('show.bs.modal', function () {
+    // Cargar clientes
+    fetch('/api/clientes')
+        .then(response => response.json())
+        .then(data => {
+            const clienteSelect = document.getElementById('cliente_id');
+            clienteSelect.innerHTML = '<option value="">Selecciona un cliente</option>'; // Reinicia las opciones
+
+            data.forEach(cliente => {
+                const option = `<option value="${cliente.id}">${cliente.nombre}</option>`;
+                clienteSelect.insertAdjacentHTML('beforeend', option);
+            });
+        })
+        .catch(error => console.error('Error fetching clientes:', error));
+
+    // Cargar productos
+    fetch('/api/productos')
+        .then(response => response.json())
+        .then(data => {
+            const productoSelect = document.getElementById('producto_id');
+            productoSelect.innerHTML = '<option value="">Selecciona un producto</option>'; // Reinicia las opciones
+
+            data.data.forEach(producto => {
+                const option = `<option value="${producto.id}">${producto.nombre}</option>`;
+                productoSelect.insertAdjacentHTML('beforeend', option);
+            });
+        })
+        .catch(error => console.error('Error fetching productos:', error));
+});
+
+            
+                // Lógica para registrar una venta
+                document.getElementById('saveSaleButton').addEventListener('click', function () {
+                    const cliente_id = document.getElementById('cliente_id').value; // Obtener el cliente seleccionado
+                    const producto_id = document.getElementById('producto_id').value;
+                    const cantidad = document.getElementById('cantidad').value;
+                    const precio_unitario = document.getElementById('precio_unitario').value;
+            
+                    // Validar campos
+                    if (!cliente_id || !producto_id || !cantidad || !precio_unitario) {
+                        alert('Por favor, completa todos los campos.');
+                        return;
+                    }
+            
+                    fetch('/api/ventas', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ cliente_id, producto_id, cantidad, precio_unitario }),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(data.message);
+                        $('#registerSaleModal').modal('hide');
+                        refreshSalesTable();
+                    })
+                    .catch(error => console.error('Error:', error));
+                });
+            
+                // Llamar a la función para cargar las ventas cuando la página se cargue
+     // Llamar a la función para cargar las ventas cuando la página se cargue
+     document.addEventListener('DOMContentLoaded', function() {
+        refreshSalesTable();
+    });
+
+    function refreshSalesTable() {
+    fetch('/api/ventas')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error en la red');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Datos de ventas:', data); // Agregar esta línea para ver la respuesta
+            const salesTableBody = document.getElementById('salesTableBody');
+            salesTableBody.innerHTML = ''; // Limpiar el contenido actual
+
+            // Verificar si hay datos
+            if (data.success && data.data.length > 0) {
+                data.data.forEach(sale => {
+                    const row = `<tr>
+                        <td>${sale.id}</td>
+                        <td>${sale.producto_nombre}</td>
+                        <td>${sale.cliente_nombre}</td>
+                        <td>${sale.cantidad}</td>
+                        <td>${sale.precio_unitario}</td>
+                        <td>${new Date(sale.fecha_venta).toLocaleString()}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="editSale(${sale.id})">Editar</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteSale(${sale.id})">Eliminar</button>
+                        </td>
+                    </tr>`;
+                    salesTableBody.insertAdjacentHTML('beforeend', row);
+                });
+            } else {
+                salesTableBody.innerHTML = '<tr><td colspan="7">No hay ventas registradas.</td></tr>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching sales:', error); // Imprimir el error
+            const salesTableBody = document.getElementById('salesTableBody');
+            salesTableBody.innerHTML = '<tr><td colspan="7">Error al cargar las ventas.</td></tr>';
+        });
+}
+
+    function editSale(saleId) {
+        // Lógica para editar la venta
+        console.log(`Editando venta con ID: ${saleId}`);
+        // Aquí puedes abrir un modal para editar la venta
+    }
+
+    function deleteSale(saleId) {
+        // Lógica para eliminar la venta
+        console.log(`Eliminando venta con ID: ${saleId}`);
+        // Aquí puedes agregar la llamada a la API para eliminar la venta
+    }
+
+    // Función para abrir el modal de edición
+    function editSale(saleId) {
+    fetch(`/api/ventas/${saleId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const sale = data.data; // Asegúrate de que esto es correcto según tu respuesta API
+                document.getElementById('editSaleId').value = sale.id;
+                document.getElementById('editProductoId').value = sale.producto_id; // Asigna el ID del producto
+                document.getElementById('editClienteId').value = sale.cliente_id; // Asigna el ID del cliente
+                document.getElementById('editCantidad').value = sale.cantidad; // Cantidad
+                document.getElementById('editPrecioUnitario').value = sale.precio_unitario; // Precio unitario
+                document.getElementById('editFechaVenta').value = sale.fecha_venta.split('T')[0]; // Fecha de venta (ajusta si el formato es diferente)
+
+                // Abre el modal
+                $('#editSaleModal').modal('show');
+            } else {
+                alert('Error al cargar los datos de la venta.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
+
+// Guardar cambios en la venta
+document.getElementById('saveEditButton').addEventListener('click', () => {
+    const saleId = document.getElementById('editSaleId').value;
+    const productoId = document.getElementById('editProductoId').value;
+    const clienteId = document.getElementById('editClienteId').value;
+    const cantidad = document.getElementById('editCantidad').value;
+    const precioUnitario = document.getElementById('editPrecioUnitario').value;
+    const fechaVenta = document.getElementById('editFechaVenta').value;
+
+    fetch(`/api/ventas/${saleId}`, {
+    method: 'PUT',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ 
+        cantidad, 
+        precio_unitario: precioUnitario, 
+        fecha_venta: fechaVenta 
+    })
+})
+
+
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Venta actualizada correctamente.');
+            $('#editSaleModal').modal('hide');
+            // Aquí podrías actualizar la vista para reflejar los cambios
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al actualizar la venta.');
+    });
+});
+
+
+// Función para abrir el modal de eliminación
+function deleteSale(saleId) {
+    document.getElementById('deleteSaleId').value = saleId;
+    $('#deleteSaleModal').modal('show');
+}
+
+// Confirmar eliminación de la venta
+document.getElementById('confirmDeleteButton').addEventListener('click', function () {
+    const id = document.getElementById('deleteSaleId').value;
+
+    fetch(`/api/ventas/${id}`, {
+        method: 'DELETE',
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message);
+        $('#deleteSaleModal').modal('hide');
+        refreshSalesTable();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+});
+function generarReporte() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: "landscape" });
+
+    // Insertar el logo en el PDF
+    const logoPath = '/css/imagenes/logo.jpg'; // Ruta de la imagen del logo
+    doc.addImage(logoPath, 'PNG', 10, 10, 30, 30); // Posición y tamaño del logo
+
+    // Título del reporte
+    doc.setFontSize(16);
+    doc.text("Reporte de Ventas", 50, 20);
+
+    // Definir encabezados, excluyendo "Acciones"
+    const encabezados = ["ID", "Producto", "Cliente", "Cantidad", "Precio Unitario", "Fecha de Venta"];
+    const filas = [];
+
+    // Extraer datos de la tabla, excluyendo la columna de "Acciones"
+    document.querySelectorAll("#salesTableBody tr").forEach(row => {
+        const celdas = Array.from(row.querySelectorAll("td"));
+        const fila = celdas.slice(0, encabezados.length).map(td => td.innerText);
+        filas.push(fila);
+    });
+
+    // Crear la tabla en el PDF con autoTable
+    doc.autoTable({
+        head: [encabezados],
+        body: filas,
+        startY: 45,
+        theme: 'striped',
+        headStyles: { fillColor: [165, 42, 42], textColor: [255, 255, 0] }, // Café en el fondo y amarillo en el texto
+        bodyStyles: { fillColor: [245, 222, 179], textColor: [0, 0, 0] }, // Fondo beige claro y texto negro
+        styles: { fontSize: 10, cellPadding: 3 }
+    });
+
+    // Guardar el PDF
+    doc.save("Reporte_Ventas.pdf");
+}
+
+</script>
+</div>
+</body>
+</html>        

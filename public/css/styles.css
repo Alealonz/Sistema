@@ -1,0 +1,77 @@
+/* Estilos generales */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f8f9fa;
+    color: #0f0a0a;
+}
+
+/* Estilo del título */
+h1 {
+    text-align: center;
+    color: #090404;
+    margin-bottom: 30px;
+}
+
+/* Estilo de las tarjetas de productos */
+.card {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: scale(1.05);
+}
+
+.card-img-top {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.card-title {
+    font-weight: bold;
+    color: #000307;
+}
+
+.card-text {
+    color: #555;
+}
+
+/* Espaciado entre las tarjetas */
+.card-body {
+    padding: 15px;
+}
+
+.col-md-4 {
+    margin-bottom: 30px;
+}
+
+/* Estilos del navbar */
+.navbar {
+    margin-bottom: 20px;
+}
+
+.navbar-brand {
+    font-weight: bold;
+    color: #060600 !important;
+}
+
+/* Estilos de la imagen del cuerpo de la pagina */
+.container {
+    margin-top: 30px;
+}
+
+/* Media queries para responsive design */
+@media (max-width: 768px) {
+    .card-img-top {
+        height: 150px;
+    }
+
+    .card-title {
+        font-size: 1.25rem;
+    }
+
+    .card-text {
+        font-size: 0.9rem;
+    }
+}

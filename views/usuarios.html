@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'EB Garamond', serif;
+            background-color: #F8F1E5; /* Color beige claro */
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar {
+            background-color: #DCA90E; /* Color amarillo oscuro */
+            padding: 20px;
+            height: 100vh;
+            position: fixed;
+            width: 220px; /* Aumentado para mejor separación */
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar a {
+            color: #4C3B2F; /* Color café oscuro */
+            display: block;
+            padding: 10px;
+            text-decoration: none;
+            font-size: 1.1rem;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            margin-bottom: 10px; /* Separación entre enlaces */
+        }
+        .sidebar a:hover {
+            background-color: #B98B2C; /* Color amarillo más claro */
+        }
+        .content {
+            margin-left: 240px;
+            padding: 20px;
+        }
+        .header {
+            background-color: #DCA90E; /* Color amarillo oscuro */
+            color: #4C3B2F; /* Color café oscuro */
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2rem;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            color: #4C3B2F; /* Color café oscuro */
+        }
+        .user-info img {
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            margin-right: 15px;
+        }
+        .user-info div {
+            text-align: right;
+        }
+        .modal-content {
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <a href="/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        <a href="/usuarios"><i class="fas fa-user-cog"></i> Usuarios</a>
+        <a href="/cliente"><i class="fas fa-user-cog"></i> Cliente</a>
+        <a href="/inventario"><i class="fas fa-boxes"></i> Productos</a>
+        <a href="/materia-prima"><i class="fas fa-file-alt"></i> Inventario de materia prima</a> <!-- Ícono actualizado -->
+        <a href="/ventas"><i class="fas fa-shopping-cart"></i> Ventas</a>
+        <a href="/cerrar-sesion"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+    </div>
+    <div class="content">
+        <div class="header">
+            <h1>Panadería "Very Nice"</h1>
+            <div class="user-info">
+                <img src="/css/imagenes/logo.jpg" alt="Foto de perfil"> <!-- Cambia la ruta de la imagen por la foto del usuario -->
+                <div>
+                    <p><strong>Nombre del Usuario</strong></p> <!-- Reemplaza con el nombre del usuario -->
+                    <p><em>Rol del Usuario</em></p> <!-- Reemplaza con el rol del usuario -->
+                </div>
+            </div>
+        </div>
+        <div class="container mt-4">
+            <h1>Gestión de Usuarios</h1>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createUserModal">
+                Crear Usuario
+              </button>
+                   
+            <button id="generateActiveCsv">Generar CSV de Activos</button>
+            <button id="generateInactiveCsv">Generar CSV de Inactivos</button>
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Correo</th>
+                            <th>Rol</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody">
+                        <!-- Los datos se llenarán dinámicamente con JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            <nav aria-label="Page navigation">
+                <ul class="pagination" id="pagination">
+                    <!-- Los controles de paginación se llenarán dinámicamente con JavaScript -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Modal para crear usuario -->
+    <!-- Modal Bootstrap 4 -->
+<div class="modal fade" id="createUserModal" tabindex="-1" aria-labelledby="createUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createUserModalLabel">Crear Usuario</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="createUserForm">
+                    <div class="mb-3">
+                        <label for="nombre" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="nombre" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="correo" class="form-label">Correo</label>
+                        <input type="email" class="form-control" id="correo" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Contraseña</label>
+                        <input type="password" class="form-control" id="password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="estado" class="form-label">Estado</label>
+                        <select class="form-select" id="estado" required>
+                            <option value="activo">Activo</option>
+                            <option value="inactivo">Inactivo</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="rol" class="form-label">Rol</label>
+                        <select class="form-select" id="rol" required>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-primary" id="saveUserButton">Guardar</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal de Edición -->
+<!-- Modal para Editar Usuario -->
+<div class="modal fade" id="editUserModal" tabindex="-1" role="dialog" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editUserModalLabel">Editar Usuario</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="editUserForm">
+            <input type="hidden" id="editUserId">
+            <div class="form-group">
+              <label for="editNombre">Nombre:</label>
+              <input type="text" id="editNombre" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="editCorreo">Correo:</label>
+              <input type="email" id="editCorreo" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="editPassword">Contraseña:</label>
+              <input type="password" id="editPassword" class="form-control" placeholder="Dejar vacío para no cambiar">
+            </div>
+            <div class="form-group">
+              <label for="editRol">Rol:</label>
+              <select id="editRol" class="form-control" required>
+                <option value="admin">Admin</option>
+                <option value="empleado">Empleado</option>
+                <option value="cliente">Cliente</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="editEstado">Estado:</label>
+              <select id="editEstado" class="form-control" required>
+                <option value="activo">Activo</option>
+                <option value="inactivo">Inactivo</option>
+              </select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" onclick="saveUserChanges()">Guardar Cambios</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Modal Ver Usuario -->
+<div class="modal fade" id="viewUserModal" tabindex="-1" role="dialog" aria-labelledby="viewUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewUserModalLabel">Detalles del Usuario</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p><strong>ID:</strong> <span id="viewUserId"></span></p>
+                <p><strong>Nombre:</strong> <span id="viewNombre"></span></p>
+                <p><strong>Correo:</strong> <span id="viewCorreo"></span></p>
+                <p><strong>Rol:</strong> <span id="viewRol"></span></p>
+                <p><strong>Estado:</strong> <span id="viewEstado"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal" id="deleteUserModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar este usuario?</p>
+                <input type="hidden" id="deleteUserId" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="deleteUser()">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+    let currentPage = 1;
+    const rowsPerPage = 5;
+
+    function fetchUsers() {
+        fetch('/api/usuarios')
+            .then(response => response.json())
+            .then(users => {
+                const totalPages = Math.ceil(users.length / rowsPerPage);
+                const tableBody = document.getElementById('userTableBody');
+                const pagination = document.getElementById('pagination');
+
+                // Llenar la tabla
+                tableBody.innerHTML = '';
+                const start = (currentPage - 1) * rowsPerPage;
+                const end = start + rowsPerPage;
+                users.slice(start, end).forEach(user => {
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td>${user.id}</td>
+                            <td>${user.nombre}</td>
+                            <td>${user.correo}</td>
+                            <td>${user.rol}</td>
+                            <td>${user.estado}</td> <!-- Columna de estado -->
+                            <td>
+                                <button class="btn btn-info" onclick="viewUser(<%= usuario.id %>)">Ver</button>
+                                <button class="btn btn-primary" onclick="editUser(<%= usuario.id %>)">Editar</button>
+                                <button class="btn btn-danger" onclick="confirmDeleteUser(<%= usuario.id %>)">Eliminar</button>
+
+                        </tr>
+                    `;
+                });
+
+                // Llenar controles de paginación
+                pagination.innerHTML = '';
+                for (let i = 1; i <= totalPages; i++) {
+                    pagination.innerHTML += `
+                        <li class="page-item ${i === currentPage ? 'active' : ''}">
+                            <a class="page-link" href="#" data-page="${i}">${i}</a>
+                        </li>
+                    `;
+                }
+
+                // Manejar clics en los controles de paginación
+                pagination.querySelectorAll('.page-link').forEach(link => {
+                    link.addEventListener('click', (event) => {
+                        event.preventDefault();
+                        currentPage = parseInt(link.getAttribute('data-page'));
+                        fetchUsers(); // Recargar usuarios
+                    });
+                });
+            })
+            .catch(error => console.error('Error al obtener usuarios:', error));
+    }
+
+    fetchUsers(); // Cargar usuarios al inicio
+
+    // Crear usuario
+    document.getElementById('saveUserButton').addEventListener('click', function () {
+        const nombre = document.getElementById('nombre').value;
+        const correo = document.getElementById('correo').value;
+        const password = document.getElementById('password').value;
+        const rol = document.getElementById('rol').value;
+        const estado = document.getElementById('estado').value;
+    
+        if (!nombre || !correo || !password || !rol || !estado) {
+            alert("Por favor, completa todos los campos.");
+            return;
+        }
+    
+        const usuario = { nombre, correo, password, rol, estado };
+    
+        fetch('/api/usuarios', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(usuario)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Usuario creado exitosamente');
+                // Cerrar el modal
+                $('#createUserModal').modal('hide');
+                // Limpiar el formulario
+                document.getElementById('createUserForm').reset();
+                // Actualizar la lista de usuarios si es necesario
+            } else {
+                alert('Error al crear el usuario: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Hubo un problema al crear el usuario.');
+        });
+    });
+    // Función para cargar y mostrar los usuarios (se puede llamar después de crear)
+    function renderUsers() {
+        fetch('/api/usuarios')
+            .then(response => response.json())
+            .then(data => {
+                console.log(data); // Esto mostrará lo que se recibe de la API
+                const tableBody = document.getElementById('userTableBody'); // Asegúrate de tener un tbody con este ID
+                tableBody.innerHTML = ''; // Limpiar la tabla antes de llenarla de nuevo
+    
+                data.forEach(user => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${user.id}</td> <!-- ID -->
+                    <td>${user.nombre}</td> <!-- Nombre -->
+                    <td>${user.correo}</td> <!-- Correo -->
+                    <td>${user.estado}</td> <!-- Estado -->
+                    <td>${user.rol}</td> <!-- Rol -->
+                    <td>
+                        <button class="btn btn-info" onclick="viewUser(${user.id})">Ver</button>
+                        <button class="btn btn-primary" onclick="editUser(${user.id})">Editar</button>
+                        <button class="btn btn-danger" onclick="confirmDeleteUser(${user.id})">Eliminar</button>
+
+                    </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            })
+            .catch(error => console.error('Error al cargar los usuarios:', error));
+    }
+    
+    
+    // Cargar usuarios al cargar la página
+    window.onload = renderUsers;
+    
+    // Eliminar modal gris si se cierra correctamente
+    document.addEventListener('hidden.bs.modal', function () {
+        document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+            backdrop.remove();
+        });
+    });
+});
+// Descargar reportes
+document.addEventListener('DOMContentLoaded', () => {
+        function generateCsv(users, status) {
+            const filteredUsers = users.filter(user => user.estado === status);
+            
+            // Convertir datos a CSV
+            const csvRows = [];
+            const headers = ['ID', 'Nombre', 'Correo', 'Rol', 'Estado'];
+            csvRows.push(headers.join(','));
+
+            filteredUsers.forEach(user => {
+                const row = [user.id, user.nombre, user.correo, user.rol, user.estado];
+                csvRows.push(row.join(','));
+            });
+
+            // Crear el archivo CSV y descargarlo
+            const csvString = csvRows.join('\n');
+            const blob = new Blob([csvString], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `reporte_usuarios_${status}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function fetchUsersAndGenerateCsv(status) {
+            fetch('/api/usuarios')
+                .then(response => response.json())
+                .then(users => generateCsv(users, status))
+                .catch(error => console.error('Error al generar CSV:', error));
+        }
+
+        document.getElementById('generateActiveCsv').addEventListener('click', () => {
+            fetchUsersAndGenerateCsv('activo');
+        });
+
+        document.getElementById('generateInactiveCsv').addEventListener('click', () => {
+            fetchUsersAndGenerateCsv('inactivo');
+        });
+    });
+    // Editar usuario
+    function editUser(userId) {
+        fetch(`/api/usuarios/${userId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(user => {
+                if (user) {
+                    // Asigna los valores del modal con los datos del usuario
+                    document.getElementById('editUserId').value = user.id;
+                    document.getElementById('editNombre').value = user.nombre;
+                    document.getElementById('editCorreo').value = user.correo;
+                    document.getElementById('editRol').value = user.rol;
+                    document.getElementById('editEstado').value = user.estado;
+    
+                    // Limpia el campo de contraseña para que el usuario pueda introducir una nueva si lo desea
+                    document.getElementById('editPassword').value = '';
+    
+                    // Muestra el modal
+                    $('#editUserModal').modal('show');
+                } else {
+                    console.error('Usuario no encontrado');
+                }
+            })
+            .catch(error => {
+                console.error('Error al cargar el usuario:', error);
+                alert('Hubo un error al cargar el usuario. Revisa la consola para más detalles.');
+            });
+    }
+    // Editar usuario
+function saveUserChanges() {
+    const userId = document.getElementById('editUserId').value;
+    const nombre = document.getElementById('editNombre').value;
+    const correo = document.getElementById('editCorreo').value;
+    const password = document.getElementById('editPassword').value; // Puede estar vacío
+    const rol = document.getElementById('editRol').value;
+    const estado = document.getElementById('editEstado').value;
+
+    // Crear el objeto del usuario
+    const usuario = { nombre, correo, rol, estado };
+    
+    // Si se proporciona una nueva contraseña, añadirla al objeto
+    if (password) {
+        usuario.password = password; // Solo enviar si hay una nueva contraseña
+    }
+
+    // Enviar la solicitud PUT al servidor
+    fetch(`/api/usuarios/${userId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(usuario)
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data); // Imprime la respuesta del servidor para ver qué se recibe
+        if (data.success) {
+            alert('Usuario actualizado exitosamente');
+            $('#editUserModal').modal('hide');
+            renderUsers(); // Actualizar la tabla de usuarios
+        } else {
+            alert('Error al actualizar el usuario: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Hubo un problema al actualizar el usuario.');
+    });
+}
+ // Ver usuario
+    // Ver usuario
+    function viewUser(userId) {
+        fetch(`/api/usuarios/${userId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(user => {
+                if (user) {
+                    // Llenar el modal con la información del usuario
+                    document.getElementById('viewUserId').innerText = user.id;
+                    document.getElementById('viewNombre').innerText = user.nombre;
+                    document.getElementById('viewCorreo').innerText = user.correo;
+                    document.getElementById('viewRol').innerText = user.rol;
+                    document.getElementById('viewEstado').innerText = user.estado;
+    
+                    // Mostrar el modal
+                    $('#viewUserModal').modal('show');
+                } else {
+                    console.error('Usuario no encontrado');
+                }
+            })
+            .catch(error => {
+                console.error('Error al cargar el usuario:', error);
+                alert('Hubo un error al cargar el usuario. Revisa la consola para más detalles.');
+            });
+    }
+    //eliminar
+     // Confirmar eliminación de usuario
+     function confirmDeleteUser(id) {
+        document.getElementById('deleteUserId').value = id; // Asigna el ID del usuario al campo oculto
+        $('#deleteUserModal').modal('show'); // Muestra el modal de confirmación
+    }
+
+    // Eliminar usuario
+    function deleteUser() {
+        const userId = document.getElementById('deleteUserId').value; // Verifica que esto esté obteniendo el ID correcto
+    
+        fetch(`/api/usuarios/${userId}`, { 
+            method: 'DELETE',
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload(); // Recargar la página para reflejar los cambios
+            }
+        })
+        .catch(error => {
+            console.error('Error al eliminar el usuario:', error);
+            alert('Hubo un problema al eliminar el usuario. Revisa la consola para más detalles.');
+        });
+    }
+    
+    </script>
+</body>
+</html>

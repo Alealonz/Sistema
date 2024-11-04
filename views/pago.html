@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pago</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        body {
+            background-image: url('/css/imagenes/fondo6.avif'); /* Ruta de la imagen */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            color: #fff;
+            font-family: 'EB Garamond', serif;
+        }
+
+        .container {
+            background-color: rgba(0, 0, 0, 0.944);
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 500px; /* Tamaño máximo del contenedor */
+            margin: auto; /* Centrar el contenedor */
+        }
+
+        .form-control, .btn {
+            font-size: 0.9rem; /* Tamaño más pequeño para los campos y botones */
+        }
+
+        .form-group {
+            margin-bottom: 10px; /* Espacio reducido entre campos */
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center; /* Centrar los botones */
+        }
+
+         /* Estilo del logo */
+         .navbar-brand img {
+            height: 85px; /* Ajusta el tamaño del logo */
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="/">Panadería "Very Nice"</a>
+    </nav>
+     <!-- Aquí colocas el logo -->
+     <a class="navbar-brand" href="#">
+        <img src="/css/imagenes/logo.jpg" alt="Logo Panadería">
+    </a>
+    <div class="container mt-4"> 
+        <h1 class="h4">Proceso de Pago</h1>
+        <form action="/confirmar-pago" method="post">
+            <div class="form-group">
+                <label for="name" class="form-label">Nombre Completo</label>
+                <input type="text" name="name" class="form-control" id="name" placeholder="Tu nombre completo" required>
+            </div>
+            <div class="form-group">
+                <label for="email" class="form-label">Correo Electrónico</label>
+                <input type="email" name="email" class="form-control" id="email" placeholder="nombre@ejemplo.com" required>
+            </div>
+            <div class="form-group">
+                <label for="address" class="form-label">Dirección de Envío</label>
+                <input type="text" name="address" class="form-control" id="address" placeholder="Tu dirección de envío" required>
+            </div>
+            <div class="form-group">
+                <label for="phone" class="form-label">Teléfono</label>
+                <input type="text" name="phone" class="form-control" id="phone" placeholder="Tu número de teléfono" required>
+            </div>
+            <div class="btn-group mt-3">
+                <a href="/carrito" class="btn btn-secondary">Volver al Carrito</a>
+                <button type="submit" class="btn btn-primary">Confirmar Pago</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

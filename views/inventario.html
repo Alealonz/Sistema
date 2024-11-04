@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrar Productos</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.13/jspdf.plugin.autotable.min.js"></script>
+
+<!-- Bootstrap CSS -->
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'EB Garamond', serif;
+            background-color: #F8F1E5; /* Color beige claro */
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar {
+            background-color: #DCA90E; /* Color amarillo oscuro */
+            padding: 20px;
+            height: 100vh;
+            position: fixed;
+            width: 220px; /* Aumentado para mejor separación */
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar a {
+            color: #4C3B2F; /* Color café oscuro */
+            display: block;
+            padding: 10px;
+            text-decoration: none;
+            font-size: 1.1rem;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            margin-bottom: 10px; /* Separación entre enlaces */
+        }
+        .sidebar a:hover {
+            background-color: #B98B2C; /* Color amarillo más claro */
+        }
+        .content {
+            margin-left: 240px;
+            padding: 20px;
+        }
+        .header {
+            background-color: #DCA90E; /* Color amarillo oscuro */
+            color: #4C3B2F; /* Color café oscuro */
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2rem;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            color: #4C3B2F; /* Color café oscuro */
+        }
+        .user-info img {
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            margin-right: 15px;
+        }
+        .user-info div {
+            text-align: right;
+        }
+        .modal-content {
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <a href="/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        <a href="/usuarios"><i class="fas fa-user-cog"></i> Usuarios</a>
+        <a href="/cliente"><i class="fas fa-user-cog"></i> Cliente</a>
+        <a href="/inventario"><i class="fas fa-boxes"></i> Productos</a>
+        <a href="/materia-prima"><i class="fas fa-file-alt"></i> Inventario de materia prima</a> <!-- Ícono actualizado -->
+        <a href="/ventas"><i class="fas fa-shopping-cart"></i> Ventas</a>
+        <a href="/cerrar-sesion"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+
+    </div>
+    <div class="content">
+        <div class="header">
+            <h1>Panadería "Very Nice"</h1>
+            <div class="user-info">
+                <img src="/css/imagenes/logo.jpg" alt="Foto de perfil"> <!-- Cambia la ruta de la imagen por la foto del usuario -->
+                <div>
+                    <p><strong>Nombre del Usuario</strong></p> <!-- Reemplaza con el nombre del usuario -->
+                    <p><em>Rol del Usuario</em></p> <!-- Reemplaza con el rol del usuario -->
+                </div>
+            </div>
+        </div>
+        <div class="container mt-4">
+            <h1>Productos</h1>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createProductModal">
+                Crear Producto
+            </button>
+            <!-- Botón para generar el reporte -->
+            <button type="button" class="btn btn-secondary mb-3" onclick="generateReport()">Generar Reporte</button>
+            
+            <div class="table-responsive">
+                <table class="table" id="productTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Precio</th>
+                            <th>Descripción</th>
+                            <th>Categoría</th>
+                            <th>Cantidad en Stock</th> <!-- Nueva columna para cantidad de stock -->
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productTableBody">
+                        <!-- Las filas de productos se agregarán aquí -->
+                    </tbody>
+                </table>
+            </div>
+            
+            
+            <nav aria-label="Page navigation">
+                <ul class="pagination" id="pagination">
+                    <!-- Los controles de paginación se llenarán dinámicamente con JavaScript -->
+                </ul>
+            </nav>
+            
+            <script>
+                // Función para generar reporte sin botones ni acciones
+                function generateReport() {
+    // Clonar la tabla para manipularla sin afectar el DOM original
+    let tableClone = document.getElementById('productTable').cloneNode(true);
+
+    // Eliminar la columna de acciones (última columna)
+    let actionCells = tableClone.querySelectorAll('th:last-child, td:last-child');
+    actionCells.forEach(cell => cell.remove());
+
+    // Crear una ventana nueva y escribir el contenido del reporte
+    let reportWindow = window.open('', '_blank');
+    reportWindow.document.write(`
+        <html>
+        <head>
+            <title>Reporte de Productos</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    padding: 20px;
+                }
+                h1 {
+                    text-align: center;
+                    color: #333;
+                }
+                table {
+                    width: 80%; /* Ajustar el tamaño de la tabla */
+                    border-collapse: collapse;
+                    margin: 20px auto;
+                    background-color: #f5deb3; /* Color amarillo pálido */
+                }
+                table, th, td {
+                    border: 1px solid #ddd;
+                    color: black; /* Letras negras */
+                }
+                th {
+                    background-color: #ffeb3b; /* Fondo amarillo para los encabezados */
+                    color: black; /* Letras negras para los encabezados */
+                    padding: 5px; /* Reducir el padding */
+                    text-align: left;
+                    font-size: 12px; /* Reducir el tamaño de letra */
+                }
+                td {
+                    padding: 5px; /* Reducir el padding */
+                    text-align: left;
+                    font-size: 12px; /* Reducir el tamaño de letra */
+                }
+                tr:nth-child(even) {
+                    background-color: #d2b48c; /* Color café claro para las filas pares */
+                }
+                tr:nth-child(odd) {
+                    background-color: #f5deb3; /* Color amarillo pálido para las filas impares */
+                }
+                .logo {
+                    display: block;
+                    margin: 0 auto 20px; /* Centrar el logo y añadir espacio debajo */
+                    width: 150px; /* Ajustar el tamaño del logo */
+                }
+            </style>
+        </head>
+        <body>
+            <img src="/css/imagenes/logo.jpg" alt="Logo" class="logo"> <!-- Inserta el logo aquí -->
+            <h1>Reporte de Productos</h1>
+            ${tableClone.outerHTML} <!-- Inserta la tabla clonada -->
+        </body>
+        </html>
+    `);
+    reportWindow.document.close();
+    reportWindow.print(); // Para que el usuario pueda imprimir o guardar como PDF
+}
+
+            </script>       
+                             
+   <!-- Modal para crear producto -->
+<div class="modal fade" id="createProductModal" tabindex="-1" aria-labelledby="createProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createProductModalLabel">Crear Producto</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="createProductForm">
+                    <div class="form-group">
+                        <label for="nombre">Nombre</label>
+                        <input type="text" class="form-control" id="nombre" placeholder="Ingresa el nombre del producto" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="precio">Precio</label>
+                        <input type="number" class="form-control" id="precio" step="0.01" placeholder="Ingresa el precio" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="descripcion">Descripción</label>
+                        <textarea class="form-control" id="descripcion" placeholder="Ingresa la descripción" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="categoria_id">Categoría</label>
+                        <select class="form-control" id="categoria_id" required>
+                            <option value="">Seleccione una categoría</option>
+                            <option value="1">Panadería</option>
+                            <option value="2">Repostería</option>
+                            <option value="3">Pastelería</option>
+                            <option value="4">Productos Sin Gluten</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="cantidad_stock">Cantidad en Stock</label>
+                        <input type="number" class="form-control" id="cantidad_stock" placeholder="Ingresa la cantidad en stock" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                <button type="button" id="saveProductButton" class="btn btn-primary">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal de Editar Producto -->
+<div class="modal fade" id="editProductModal" tabindex="-1" role="dialog" aria-labelledby="editProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editProductModalLabel">Editar Producto</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editProductForm">
+                    <input type="hidden" id="editProductId">
+                    <div class="form-group">
+                        <label for="editNombre">Nombre</label>
+                        <input type="text" class="form-control" id="editNombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editPrecio">Precio</label>
+                        <input type="number" class="form-control" id="editPrecio" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editDescripcion">Descripción</label>
+                        <textarea class="form-control" id="editDescripcion" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="editCategoriaId">Categoría</label>
+                        <select class="form-control" id="editCategoriaId" required>
+                            <option value="">Seleccione una categoría</option>
+                            <option value="1">Panadería</option>
+                            <option value="2">Repostería</option>
+                            <option value="3">Pastelería</option>
+                            <option value="4">Productos Sin Gluten</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editCantidadStock">Cantidad en Stock</label>
+                        <input type="number" class="form-control" id="editCantidadStock" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" id="updateProductButton">Actualizar Producto</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Ver Producto -->
+<div class="modal fade" id="viewProductModal" tabindex="-1" role="dialog" aria-labelledby="viewProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewProductModalLabel">Detalles del Producto</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Nombre:</strong> <span id="viewNombre"></span></p>
+                <p><strong>Precio:</strong> Q<span id="viewPrecio"></span></p>
+                <p><strong>Descripción:</strong> <span id="viewDescripcion"></span></p>
+                <p><strong>Categoría ID:</strong> <span id="viewCategoriaId"></span></p>
+                <p><strong>Cantidad en Stock:</strong> <span id="viewCantidadStock"></span></p> <!-- Nueva línea para cantidad de stock -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Modal para Eliminar Producto -->
+<!-- Modal de Eliminar Producto -->
+<div class="modal fade" id="deleteProductModal" tabindex="-1" role="dialog" aria-labelledby="deleteProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteProductModalLabel">Eliminar Producto</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar este producto?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteButton">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Bootstrap 4.5.2 JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    
+<script>
+// Función para guardar un nuevo producto
+document.getElementById('saveProductButton').addEventListener('click', function () {
+    const nombre = document.getElementById('nombre').value;
+    const precio = document.getElementById('precio').value;
+    const descripcion = document.getElementById('descripcion').value;
+    const categoria_id = document.getElementById('categoria_id').value;
+    const cantidad_stock = document.getElementById('cantidad_stock').value; // Nuevo campo
+
+    if (!nombre || !precio || !descripcion || !categoria_id || !cantidad_stock) {
+        alert("Por favor, completa todos los campos.");
+        return;
+    }
+
+    const producto = { nombre, precio, descripcion, categoria_id, cantidad_stock }; // Agregar cantidad_stock
+
+    fetch('/api/productos', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(producto)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Producto creado exitosamente');
+            // Cerrar el modal
+            $('#createProductModal').modal('hide');
+            // Limpiar el formulario
+            document.getElementById('createProductForm').reset();
+            // Actualizar la lista de productos
+            renderProducts();
+        } else {
+            alert('Error al crear el producto: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Hubo un problema al crear el producto.');
+    });
+});
+
+
+function renderProducts() {
+    fetch('/api/productos')
+        .then(response => response.json())
+        .then(data => {
+            const tableBody = document.getElementById('productTableBody');
+            tableBody.innerHTML = '';
+
+            data.data.forEach(product => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${product.id}</td>
+                    <td>${product.nombre}</td>
+                    <td>${product.precio}</td>
+                    <td>${product.descripcion}</td>
+                    <td>${product.categoria}</td>
+                    <td>${product.cantidad_stock}</td> <!-- Mostrar cantidad en stock -->
+                    <td>
+                        <button class="btn btn-info" onclick="viewProduct(${product.id})">Ver</button>
+                        <button class="btn btn-primary" onclick="editProduct(${product.id})">Editar</button>
+                        <button class="btn btn-danger" onclick="deleteProduct(${product.id})">Eliminar</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        })
+        .catch(error => console.error('Error al cargar productos:', error));
+}
+
+window.onload = renderProducts;
+
+function viewProduct(productId) {
+    // Obtener los datos del producto por ID
+    fetch(`/api/productos/${productId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Cargar los datos en el modal
+                document.getElementById('viewNombre').textContent = data.data.nombre;
+                document.getElementById('viewPrecio').textContent = data.data.precio;
+                document.getElementById('viewDescripcion').textContent = data.data.descripcion;
+                document.getElementById('viewCategoriaId').textContent = data.data.categoria_id;
+
+                // Mostrar el modal
+                $('#viewProductModal').modal('show');
+            } else {
+                alert('Error al cargar los datos del producto.');
+            }
+        })
+        .catch(error => console.error('Error al obtener el producto:', error));
+}
+
+
+function editProduct(productId) {
+    fetch(`/api/productos/${productId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('editProductId').value = data.data.id;
+                document.getElementById('editNombre').value = data.data.nombre;
+                document.getElementById('editPrecio').value = data.data.precio;
+                document.getElementById('editDescripcion').value = data.data.descripcion;
+                document.getElementById('editCategoriaId').value = data.data.categoria_id;
+                document.getElementById('editCantidadStock').value = data.data.cantidad_stock; // Cargar cantidad en stock
+
+                $('#editProductModal').modal('show');
+            } else {
+                alert('Error al cargar los datos del producto.');
+            }
+        })
+        .catch(error => console.error('Error al obtener el producto:', error));
+}
+document.getElementById('updateProductButton').addEventListener('click', function () {
+    const id = document.getElementById('editProductId').value;
+    const nombre = document.getElementById('editNombre').value;
+    const precio = document.getElementById('editPrecio').value;
+    const descripcion = document.getElementById('editDescripcion').value;
+    const categoria_id = document.getElementById('editCategoriaId').value;
+    const cantidad_stock = document.getElementById('editCantidadStock').value; // Nuevo campo
+
+    const producto = { nombre, precio, descripcion, categoria_id, cantidad_stock }; // Agregar cantidad_stock
+
+    fetch(`/api/productos/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(producto)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Producto actualizado exitosamente');
+            $('#editProductModal').modal('hide');
+            document.getElementById('editProductForm').reset();
+            renderProducts();
+        } else {
+            alert('Error al actualizar el producto: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Hubo un problema al actualizar el producto.');
+    });
+});
+function deleteProduct(productId) {
+    productIdToDelete = productId; // Guarda el ID del producto a eliminar
+    $('#deleteProductModal').modal('show'); // Muestra el modal de eliminación
+}
+
+// Al hacer clic en el botón de confirmar eliminación
+document.getElementById('confirmDeleteButton').addEventListener('click', function () {
+    fetch(`/api/productos/${productIdToDelete}`, {
+        method: 'DELETE',
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            alert('Producto eliminado exitosamente');
+            $('#deleteProductModal').modal('hide');
+            renderProducts(); // Actualiza la lista de productos
+        } else {
+            alert('Error al eliminar el producto: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Hubo un problema al eliminar el producto.');
+    });
+});
+
+
+</script>
+</body>
+</html>

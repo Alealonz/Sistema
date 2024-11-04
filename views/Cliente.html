@@ -1,0 +1,425 @@
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.21/jspdf.plugin.autotable.min.js"></script>
+<style>
+    body {
+        font-family: 'EB Garamond', serif;
+        background-color: #F8F1E5; /* Color beige claro */
+        padding: 0;
+        margin: 0;
+    }
+    .sidebar {
+        background-color: #DCA90E; /* Color amarillo oscuro */
+        padding: 20px;
+        height: 100vh;
+        position: fixed;
+        width: 220px; /* Aumentado para mejor separación */
+        display: flex;
+        flex-direction: column;
+    }
+    .sidebar a {
+        color: #4C3B2F; /* Color café oscuro */
+        display: block;
+        padding: 10px;
+        text-decoration: none;
+        font-size: 1.1rem;
+        border-radius: 5px;
+        transition: background-color 0.3s;
+        margin-bottom: 10px; /* Separación entre enlaces */
+    }
+    .sidebar a:hover {
+        background-color: #B98B2C; /* Color amarillo más claro */
+    }
+    .content {
+        margin-left: 240px;
+        padding: 20px;
+    }
+    .header {
+        background-color: #DCA90E; /* Color amarillo oscuro */
+        color: #4C3B2F; /* Color café oscuro */
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .header h1 {
+        margin: 0;
+        font-size: 2rem;
+    }
+    .user-info {
+        display: flex;
+        align-items: center;
+        color: #4C3B2F; /* Color café oscuro */
+    }
+    .user-info img {
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        margin-right: 15px;
+    }
+    .user-info div {
+        text-align: right;
+    }
+    .modal-content {
+        border-radius: 10px;
+    }
+</style>
+</head>
+<body>
+<div class="sidebar">
+    <a href="/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+    <a href="/usuarios"><i class="fas fa-user-cog"></i> Usuarios</a>
+    <a href="/cliente"><i class="fas fa-user-cog"></i> Cliente</a>
+    <a href="/inventario"><i class="fas fa-boxes"></i> Productos</a>
+    <a href="/materia-prima"><i class="fas fa-file-alt"></i> Inventario de materia prima</a> <!-- Ícono actualizado -->
+    <a href="/ventas"><i class="fas fa-shopping-cart"></i> Ventas</a>
+    <a href="/cerrar-sesion"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+
+</div>
+<div class="content">
+    <div class="header">
+        <h1>Panadería "Very Nice"</h1>
+        <div class="user-info">
+            <img src="/css/imagenes/logo.jpg" alt="Foto de perfil"> <!-- Cambia la ruta de la imagen por la foto del usuario -->
+            <div>
+                <p><strong>Nombre del Usuario</strong></p> <!-- Reemplaza con el nombre del usuario -->
+                <p><em>Rol del Usuario</em></p> <!-- Reemplaza con el rol del usuario -->
+            </div>
+        </div>
+    </div>
+<div class="container mt-4">
+    <h2>Gestión de Clientes</h2>
+    <button id="createClientButton" class="btn btn-primary mb-3" data-toggle="modal" data-target="#clientModal">Agregar Cliente</button>
+    <button onclick="generateReport()">Generar Reporte</button>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Dirección</th>
+                <th>Teléfono</th>
+                <th>Correo</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="clientTableBody"></tbody>
+    </table>
+</div>
+
+<!-- Modal para agregar/editar cliente -->
+<div class="modal fade" id="clientModal" tabindex="-1" role="dialog" aria-labelledby="clientModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="clientModalLabel">Agregar Cliente</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="clientForm">
+                    <input type="hidden" id="clientId">
+                    <div class="form-group">
+                        <label for="nombre">Nombre</label>
+                        <input type="text" class="form-control" id="nombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="direccion">Dirección</label>
+                        <input type="text" class="form-control" id="direccion" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="telefono">Teléfono</label>
+                        <input type="text" class="form-control" id="telefono" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="correo">Correo</label>
+                        <input type="email" class="form-control" id="correo" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                <button type="button" id="saveClientButton" class="btn btn-primary">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ver Cliente -->
+<div class="modal fade" id="viewClienteModal" tabindex="-1" role="dialog" aria-labelledby="viewClienteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="viewClienteModalLabel">Ver Cliente</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p><strong>ID:</strong> <span id="viewClienteId"></span></p>
+          <p><strong>Nombre:</strong> <span id="viewClienteNombre"></span></p>
+          <p><strong>Dirección:</strong> <span id="viewClienteDireccion"></span></p>
+          <p><strong>Teléfono:</strong> <span id="viewClienteTelefono"></span></p>
+          <p><strong>Correo:</strong> <span id="viewClienteCorreo"></span></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- Modal Leer Cliente -->
+<div class="modal fade" id="readClienteModal" tabindex="-1" role="dialog" aria-labelledby="readClienteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="readClienteModalLabel">Detalles del Cliente</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p><strong>Nombre:</strong> <span id="clienteNombre"></span></p>
+          <p><strong>Dirección:</strong> <span id="clienteDireccion"></span></p>
+          <p><strong>Teléfono:</strong> <span id="clienteTelefono"></span></p>
+          <p><strong>Correo:</strong> <span id="clienteCorreo"></span></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal Actualizar Cliente -->
+  <div class="modal fade" id="updateClienteModal" tabindex="-1" role="dialog" aria-labelledby="updateClienteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="updateClienteModalLabel">Actualizar Cliente</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="updateClienteForm">
+            <div class="form-group">
+              <label for="updateNombre">Nombre</label>
+              <input type="text" class="form-control" id="updateNombre" required>
+            </div>
+            <div class="form-group">
+              <label for="updateDireccion">Dirección</label>
+              <input type="text" class="form-control" id="updateDireccion" required>
+            </div>
+            <div class="form-group">
+              <label for="updateTelefono">Teléfono</label>
+              <input type="text" class="form-control" id="updateTelefono" required>
+            </div>
+            <div class="form-group">
+              <label for="updateCorreo">Correo</label>
+              <input type="email" class="form-control" id="updateCorreo" required>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="saveUpdateCliente">Guardar Cambios</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal Eliminar Cliente -->
+  <div class="modal fade" id="deleteClienteModal" tabindex="-1" role="dialog" aria-labelledby="deleteClienteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteClienteModalLabel">Eliminar Cliente</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>¿Estás seguro de que deseas eliminar este cliente?</p>
+          <p><strong>Nombre:</strong> <span id="deleteClienteNombre"></span></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteCliente">Eliminar</button>
+        </div>
+      </div>
+    </div>
+  </div>  
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+    // Cargar clientes al cargar la página
+document.addEventListener('DOMContentLoaded', refreshClientTable);
+
+function refreshClientTable() {
+    fetch('/api/clientes')
+        .then(response => response.json())
+        .then(data => {
+            const clientTableBody = document.getElementById('clientTableBody');
+            clientTableBody.innerHTML = '';
+
+            data.forEach(cliente => {
+                const row = `<tr>
+                    <td>${cliente.id}</td>
+                    <td>${cliente.nombre}</td>
+                    <td>${cliente.direccion}</td>
+                    <td>${cliente.telefono}</td>
+                    <td>${cliente.correo}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info" onclick="viewClient(${cliente.id})">Ver</button>
+                        <button class="btn btn-sm btn-warning" onclick="editClient(${cliente.id})">Editar</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteClient(${cliente.id})">Eliminar</button>
+                    </td>
+                </tr>`;
+                clientTableBody.insertAdjacentHTML('beforeend', row);
+            });
+        })
+        .catch(error => console.error('Error al obtener clientes:', error));
+}
+
+// Guardar cliente
+document.getElementById('saveClientButton').addEventListener('click', () => {
+    const id = document.getElementById('clientId').value;
+    const nombre = document.getElementById('nombre').value;
+    const direccion = document.getElementById('direccion').value;
+    const telefono = document.getElementById('telefono').value;
+    const correo = document.getElementById('correo').value;
+
+    const method = id ? 'PUT' : 'POST';
+    const url = id ? `/api/clientes/${id}` : '/api/clientes';
+
+    fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre, direccion, telefono, correo }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message);
+        $('#clientModal').modal('hide');
+        refreshClientTable();
+    })
+    .catch(error => console.error('Error al guardar cliente:', error));
+});
+
+// Abrir modal de "Ver Cliente"
+// Abrir modal de "Ver Cliente"
+function viewClient(id) {
+    fetch(`/api/clientes/${id}`)
+        .then(response => response.json())
+        .then(cliente => {
+            document.getElementById('viewClienteId').textContent = cliente.id;
+            document.getElementById('viewClienteNombre').textContent = cliente.nombre;
+            document.getElementById('viewClienteDireccion').textContent = cliente.direccion;
+            document.getElementById('viewClienteTelefono').textContent = cliente.telefono;
+            document.getElementById('viewClienteCorreo').textContent = cliente.correo;
+
+            $('#viewClienteModal').modal('show');
+        })
+        .catch(error => console.error('Error al cargar cliente:', error));
+}
+
+// Abrir modal de "Editar Cliente"
+// Abrir modal de "Editar Cliente"
+function editClient(id) {
+    fetch(`/api/clientes/${id}`)
+        .then(response => response.json())
+        .then(cliente => {
+            document.getElementById('clientId').value = cliente.id; // Cambiado para usar el ID correcto
+            document.getElementById('nombre').value = cliente.nombre;
+            document.getElementById('direccion').value = cliente.direccion;
+            document.getElementById('telefono').value = cliente.telefono;
+            document.getElementById('correo').value = cliente.correo;
+
+            $('#clientModal').modal('show'); // Abre el modal de agregar/editar
+        })
+        .catch(error => console.error('Error al cargar cliente:', error));
+}
+// Abrir modal de "Eliminar Cliente"
+function deleteClient(id) {
+    fetch(`/api/clientes/${id}`)
+        .then(response => response.json())
+        .then(cliente => {
+            document.getElementById('deleteClienteNombre').textContent = cliente.nombre;
+
+            document.getElementById('confirmDeleteCliente').onclick = () => confirmDeleteClient(id);
+            $('#deleteClienteModal').modal('show');
+        })
+        .catch(error => console.error('Error al cargar cliente:', error));
+}
+// Confirmar eliminación de cliente
+function confirmDeleteClient(id) {
+    fetch(`/api/clientes/${id}`, { method: 'DELETE' })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            $('#deleteClientModal').modal('hide');
+            refreshClientTable();
+        })
+        .catch(error => console.error('Error al eliminar cliente:', error));
+}
+
+// Función para generar el reporte
+function generateReport() {
+    // Obtener la tabla y sus filas
+    const table = document.querySelector('.table');
+    const rows = table.getElementsByTagName('tr');
+
+    // Crear una ventana nueva para el reporte
+    let reportWindow = window.open('', '', 'width=800, height=600');
+    reportWindow.document.write('<html><head><title>Reporte de Clientes</title>');
+    reportWindow.document.write('<style>');
+    reportWindow.document.write('body { font-family: Arial, sans-serif; background-color: #F5F5DC; }'); // Color de fondo suave
+    reportWindow.document.write('h2 { text-align: center; color: #3B2A12; }'); // Marrón oscuro para el título
+    reportWindow.document.write('table { width: 100%; border-collapse: collapse; }');
+    reportWindow.document.write('th { background-color: #FFC107; color: #3B2A12; padding: 8px; }'); // Amarillo para encabezados
+    reportWindow.document.write('td { background-color: #FFF8E1; border: 1px solid #3B2A12; padding: 8px; text-align: left; color: #3B2A12; }'); // Color de fondo suave para celdas con borde marrón oscuro
+    reportWindow.document.write('</style>');
+    reportWindow.document.write('</head><body>');
+    
+    // Agregar el logo
+    reportWindow.document.write('<img src="/css/imagenes/logo.jpg" alt="Logo" style="display: block; margin: 0 auto; width: 150px; height: auto;">'); // Ajusta el tamaño según sea necesario
+    reportWindow.document.write('<h2>Reporte de Clientes</h2>');
+    reportWindow.document.write('<table>');
+
+    // Encabezados de la tabla
+    reportWindow.document.write('<tr>');
+    reportWindow.document.write('<th>ID</th>');
+    reportWindow.document.write('<th>Nombre</th>');
+    reportWindow.document.write('<th>Dirección</th>');
+    reportWindow.document.write('<th>Teléfono</th>');
+    reportWindow.document.write('<th>Correo</th>');
+    reportWindow.document.write('</tr>');
+
+    // Recorrer las filas y añadirlas al reporte (omitimos las columnas de acciones)
+    for (let i = 0; i < rows.length; i++) {
+        const cells = rows[i].getElementsByTagName('td');
+        if (cells.length > 0) { // Asegurarse de que haya celdas
+            reportWindow.document.write('<tr>');
+            reportWindow.document.write('<td>' + cells[0].innerHTML + '</td>'); // ID
+            reportWindow.document.write('<td>' + cells[1].innerHTML + '</td>'); // Nombre
+            reportWindow.document.write('<td>' + cells[2].innerHTML + '</td>'); // Dirección
+            reportWindow.document.write('<td>' + cells[3].innerHTML + '</td>'); // Teléfono
+            reportWindow.document.write('<td>' + cells[4].innerHTML + '</td>'); // Correo
+            reportWindow.document.write('</tr>');
+        }
+    }
+
+    reportWindow.document.write('</table>');
+    reportWindow.document.write('</body></html>');
+
+    // Imprimir el reporte o mostrarlo en pantalla
+    reportWindow.document.close();
+    reportWindow.print();
+}
+
+</script>

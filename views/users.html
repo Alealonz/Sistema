@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Cargar usuarios
+            function loadUsers() {
+                $.get('/users/list', function(data) {
+                    let rows = '';
+                    data.forEach(user => {
+                        rows += `<tr>
+                            <td>${user.id}</td>
+                            <td>${user.nombre}</td>
+                            <td>${user.correo}</td>
+                            <td>${user.rol}</td>
+                            <td>
+                                <button class="btn btn-warning btn-sm" onclick="editUser(${user.id})">Editar</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteUser(${user.id})">Eliminar</button>
+                            </td>
+                        </tr>`;
+                    });
+                    $('#userTable tbody').html(rows);
+                });
+            }
+
+            loadUsers();
+
+            // Crear usuario
+            $('#createForm').on('submit', function(e) {
+                e.preventDefault();
+                $.post('/users', $(this).serialize(), function(response) {
+                    alert(response.message);
+                    $('#createForm')[0].reset();
+                    loadUsers();
+                }).fail(function(xhr) {
+                    alert(xhr.responseJSON.error);
+                });
+            });
+
+            // Editar usuario
+            window.editUser = function(id) {
+                $.get(`/users/${id}`, function(user) {
+                    $('#editId').val(user.id);
+                    $('#editNombre').val(user.nombre);
+                    $('#editCorreo').val(user.correo);
+                    $('#editRol').val(user.rol);
+                    $('#editPassword').val('');
+                    $('#editModal').modal('show');
+                });
+            }
+
+            $('#editForm').on('submit', function(e) {
+                e.preventDefault();
+                $.ajax({
+                    url: `/users/${$('#editId').val()}`,
+                    method: 'PUT',
+                    data: $(this).serialize(),
+                    success: function(response) {
+                        alert(response.message);
+                        $('#editModal').modal('hide');
+                        loadUsers();
+                    },
+                    error: function(xhr) {
+                        alert(xhr.responseJSON.error);
+                    }
+                });
+            });
+
+            // Eliminar usuario
+            window.deleteUser = function(id) {
+                if (confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
+                    $.ajax({
+                        url: `/users/${id}`,
+                        method: 'DELETE',
+                        success: function(response) {
+                            alert(response.message);
+                            loadUsers();
+                        },
+                        error: function(xhr) {
+                            alert(xhr.responseJSON.error);
+                        }
+                    });
+                }
+            }
+        });
+    </script>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Gestión de Usuarios</h1>
+        
+        <!-- Formulario para crear usuario -->
+        <h2>Crear Usuario</h2>
+        <form id="createForm">
+            <div class="mb-3">
+                <label for="nombre" class="form-label">Nombre</label>
+                <input type="text" class="form-control" id="nombre" name="nombre" required>
+            </div>
+            <div class="mb-3">
+                <label for="correo" class="form-label">Correo</label>
+                <input type="email" class="form-control" id="correo" name="correo" required>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Contraseña</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+            <div class="mb-3">
+                <label for="rol" class="form-label">Rol</label>
+                <select class="form-control" id="rol" name="rol" required>
+                    <option value="admin">Admin</option>
+                    <option value="empleado">Empleado</option>
+                    <option value="cliente">Cliente</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Crear Usuario</button>
+        </form>
+
+        <!-- Tabla de usuarios -->
+        <h2 class="mt-4">Lista de Usuarios</h2>
+        <table id="userTable" class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Correo</th>
+                    <th>Rol</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Las filas se llenarán con jQuery -->
+            </tbody>
+        </table>
+
+        <!-- Modal para editar usuario -->
+        <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editModalLabel">Editar Usuario</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editForm">
+                            <input type="hidden" id="editId" name="id">
+                            <div class="mb-3">
+                                <label for="editNombre" class="form-label">Nombre</label>
+                                <input type="text" class="form-control" id="editNombre" name="nombre" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editCorreo" class="form-label">Correo</label>
+                                <input type="email" class="form-control" id="editCorreo" name="correo" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editPassword" class="form-label">Contraseña (opcional)</label>
+                                <input type="password" class="form-control" id="editPassword" name="password">
+                            </div>
+                            <div class="mb-3">
+                                <label for="editRol" class="form-label">Rol</label>
+                                <select class="form-control" id="editRol" name="rol" required>
+                                    <option value="admin">Admin</option>
+                                    <option value="empleado">Empleado</option>
+                                    <option value="cliente">Cliente</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Actualizar Usuario</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

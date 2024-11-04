@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario de Materia Prima</title>
+    <!-- Bootstrap 4 CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+
+    <style>
+        body {
+            font-family: 'EB Garamond', serif;
+            background-color: #F8F1E5; /* Color beige claro */
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar {
+            background-color: #DCA90E; /* Color amarillo oscuro */
+            padding: 20px;
+            height: 100vh;
+            position: fixed;
+            width: 220px; /* Aumentado para mejor separación */
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar a {
+            color: #4C3B2F; /* Color café oscuro */
+            display: block;
+            padding: 10px;
+            text-decoration: none;
+            font-size: 1.1rem;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            margin-bottom: 10px; /* Separación entre enlaces */
+        }
+        .sidebar a:hover {
+            background-color: #B98B2C; /* Color amarillo más claro */
+        }
+        .content {
+            margin-left: 240px;
+            padding: 20px;
+        }
+        .header {
+            background-color: #DCA90E; /* Color amarillo oscuro */
+            color: #4C3B2F; /* Color café oscuro */
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2rem;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            color: #4C3B2F; /* Color café oscuro */
+        }
+        .user-info img {
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            margin-right: 15px;
+        }
+        .user-info div {
+            text-align: right;
+        }
+        .modal-content {
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <a href="/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        <a href="/usuarios"><i class="fas fa-user-cog"></i> Usuarios</a>
+        <a href="/cliente"><i class="fas fa-user-cog"></i> Cliente</a>
+        <a href="/inventario"><i class="fas fa-boxes"></i> Productos</a>
+        <a href="/materia-prima"><i class="fas fa-file-alt"></i> Inventario de materia prima</a> <!-- Ícono actualizado -->
+        <a href="/ventas"><i class="fas fa-shopping-cart"></i> Ventas</a>
+        <a href="/cerrar-sesion"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+    </div>
+    <div class="content">
+        <div class="header">
+            <h1>Panadería "Very Nice"</h1>
+            <div class="user-info">
+                <img src="/css/imagenes/logo.jpg" alt="Foto de perfil"> <!-- Cambia la ruta de la imagen por la foto del usuario -->
+                <div>
+                    <p><strong>Nombre del Usuario</strong></p> <!-- Reemplaza con el nombre del usuario -->
+                    <p><em>Rol del Usuario</em></p> <!-- Reemplaza con el rol del usuario -->
+                </div>
+            </div>
+        </div>
+<body>
+
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Inventario de Materia Prima</h1>
+
+        <!-- Botón para abrir el modal de agregar -->
+        <button class="btn btn-primary mb-4" data-toggle="modal" data-target="#modalMateriaPrima">Agregar Materia Prima</button>
+        <button id="descargarExcel">Descargar Excel desde Tabla</button>
+
+
+        <!-- Tabla para mostrar la lista de materia prima -->
+        <table id="inventarioList" class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+            <th>Nombre</th>
+            <th>Descripción</th>
+            <th>Cantidad Actual</th>
+            <th>Unidad</th>
+            <th>Fecha Entrada</th>
+            <th>Fecha Caducidad</th>
+            <th>Proveedor</th>
+            <th>Precio Unitario</th>
+            <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Aquí se insertarán los datos -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal para agregar/editar materia prima -->
+    <div class="modal fade" id="modalMateriaPrima" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalLabel">Materia Prima</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="formMateriaPrima">
+                        <input type="hidden" id="id_prima"> <!-- Campo oculto para el ID -->
+    
+                        <div class="form-group">
+                            <label for="nombre">Nombre</label>
+                            <input type="text" class="form-control" id="nombre" placeholder="Nombre">
+                        </div>
+                        <div class="form-group">
+                            <label for="descripcion">Descripción</label>
+                            <textarea class="form-control" id="descripcion" rows="3" placeholder="Descripción"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="cantidad_actual">Cantidad Actual</label>
+                            <input type="number" step="0.01" class="form-control" id="cantidad_actual" placeholder="Cantidad Actual">
+                        </div>
+                        <div class="form-group">
+                            <label for="unidad_medida">Unidad de Medida</label>
+                            <input type="text" class="form-control" id="unidad_medida" placeholder="Unidad de Medida">
+                        </div>
+                        <div class="form-group">
+                            <label for="fecha_entrada">Fecha de Entrada</label>
+                            <input type="date" class="form-control" id="fecha_entrada">
+                        </div>
+                        <div class="form-group">
+                            <label for="fecha_caducidad">Fecha de Caducidad</label>
+                            <input type="date" class="form-control" id="fecha_caducidad">
+                        </div>
+                        <div class="form-group">
+                            <label for="proveedor">Proveedor</label>
+                            <input type="text" class="form-control" id="proveedor" placeholder="Proveedor">
+                        </div>
+                        <div class="form-group">
+                            <label for="precio_unitario">Precio Unitario</label>
+                            <input type="number" step="0.01" class="form-control" id="precio_unitario" placeholder="Precio Unitario">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" onclick="guardarMateriaPrima()">Guardar Cambios</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal para confirmación de eliminación -->
+    
+<!-- Modal de Confirmación de Eliminación -->
+<div class="modal fade" id="modalEliminarMateriaPrima" tabindex="-1" role="dialog" aria-labelledby="modalEliminarLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalEliminarLabel">Confirmar Eliminación</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                ¿Estás seguro de que deseas eliminar esta materia prima?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmarEliminar">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para mostrar los detalles de la materia prima -->
+<div id="verModal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Detalles de Materia Prima</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p><strong>Nombre:</strong> <span id="nombreMateria"></span></p>
+          <p><strong>Descripción:</strong> <span id="descripcionMateria"></span></p>
+          <p><strong>Cantidad Actual:</strong> <span id="cantidadMateria"></span></p>
+          <p><strong>Unidad de Medida:</strong> <span id="unidadMateria"></span></p>
+          <p><strong>Fecha de Entrada:</strong> <span id="fechaEntradaMateria"></span></p>
+          <p><strong>Fecha de Caducidad:</strong> <span id="fechaCaducidadMateria"></span></p>
+          <p><strong>Proveedor:</strong> <span id="proveedorMateria"></span></p>
+          <p><strong>Precio Unitario:</strong> <span id="precioMateria"></span></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <!-- Bootstrap 4 JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- Lógica para manejar los modales -->
+    <script>
+         document.getElementById('descargarExcel').addEventListener('click', function() {
+            // Realiza una solicitud AJAX para obtener los datos de tu sistema
+            fetch('/materia-prima/listar') // Cambia esta URL a la ruta correcta en tu sistema
+                .then(response => response.json())
+                .then(data => {
+                    // Crear una hoja de trabajo (worksheet) a partir de los datos obtenidos
+                    var ws_data = [];
+                    // Encabezados
+                    ws_data.push([
+                        'ID', 'Nombre', 'Descripción', 'Cantidad Actual', 'Unidad',
+                        'Fecha Entrada', 'Fecha Caducidad', 'Proveedor', 'Precio Unitario'
+                    ]);
+
+                    // Llenar los datos (recorriendo el array JSON)
+                    data.forEach(item => {
+                        ws_data.push([
+                            item.id_prima || 'N/A',
+                            item.nombre || 'N/A',
+                            item.descripcion || 'N/A',
+                            item.cantidad_actual || 'N/A',
+                            item.unidad_medida || 'N/A',
+                            new Date(item.fecha_entrada).toLocaleDateString() || 'N/A',
+                            new Date(item.fecha_caducidad).toLocaleDateString() || 'N/A',
+                            item.proveedor || 'N/A',
+                            item.precio_unitario || 'N/A'
+                        ]);
+                    });
+
+                    // Generar la hoja de Excel
+                    var ws = XLSX.utils.aoa_to_sheet(ws_data);
+
+                    // Crear un libro de trabajo (workbook)
+                    var wb = XLSX.utils.book_new();
+
+                    // Añadir la hoja al libro de trabajo
+                    XLSX.utils.book_append_sheet(wb, ws, 'MateriaPrimaReporte');
+
+                    // Descargar el archivo Excel
+                    XLSX.writeFile(wb, 'reporte_materia_prima.xlsx');
+                })
+                .catch(error => console.error('Error al obtener los datos:', error));
+        });
+
+
+    $(document).ready(function() {
+    cargarMateriaPrima(); // Llamada a la función para cargar los datos al iniciar la página
+});
+
+function cargarMateriaPrima() {
+    $.ajax({
+        url: '/materia-prima/listar', // Ruta para obtener la lista
+        method: 'GET',
+        success: function(data) {
+            let inventarioList = $('#inventarioList tbody'); // Selecciona el cuerpo de la tabla
+            inventarioList.empty(); // Limpia la tabla antes de llenarla
+            data.forEach(item => {
+                inventarioList.append(`
+                    <tr>
+                        <td>${item.id_prima || 'N/A'}</td>
+                        <td>${item.nombre || 'N/A'}</td>
+                        <td>${item.descripcion || 'N/A'}</td>
+                        <td>${item.cantidad_actual || 'N/A'}</td>
+                        <td>${item.unidad_medida || 'N/A'}</td>
+                        <td>${new Date(item.fecha_entrada).toLocaleDateString() || 'N/A'}</td>
+                        <td>${new Date(item.fecha_caducidad).toLocaleDateString() || 'N/A'}</td>
+                        <td>${item.proveedor || 'N/A'}</td>
+                        <td>${item.precio_unitario || 'N/A'}</td>
+                        <td>
+                            <button class="btn btn-warning" onclick="abrirModalEditar(${item.id_prima})">Editar</button>
+                            <button type="button" class="btn btn-info" onclick="verDetalles(${item.id_prima})">Ver</button>
+                            <button class="btn btn-danger" onclick="abrirModalEliminar(${item.id_prima})">Eliminar</button>
+                        </td>
+                    </tr>
+                `);
+            });
+        },
+        error: function(err) {
+            console.error('Error al cargar materia prima:', err);
+        }
+    });
+}
+
+        // Función para abrir el modal de agregar o editar materia prima
+        function abrirModalEditar(id) {
+            if (id) {
+                // Si hay un ID, se va a editar, por lo que se realiza una solicitud AJAX para obtener los datos de la materia prima
+                $.ajax({
+                    url: `/materia-prima/obtener/${id}`, // Ruta para obtener la materia prima con el ID específico
+                    method: 'GET',
+                    success: function(data) {
+                        // Llenar los campos del formulario con los datos obtenidos
+                        $('#id_prima').val(data.id_prima); // Campo oculto para el ID
+                        $('#nombre').val(data.nombre);
+                        $('#descripcion').val(data.descripcion);
+                        $('#cantidad_actual').val(data.cantidad_actual);
+                        $('#unidad_medida').val(data.unidad_medida);
+                        $('#fecha_entrada').val(data.fecha_entrada);
+                        $('#fecha_caducidad').val(data.fecha_caducidad);
+                        $('#proveedor').val(data.proveedor);
+                        $('#precio_unitario').val(data.precio_unitario);
+    
+                        // Abrir el modal para editar
+                        $('#modalMateriaPrima').modal('show');
+                    },
+                    error: function(err) {
+                        console.error('Error al obtener los datos de la materia prima:', err);
+                    }
+                });
+            } else {
+                // Si no hay ID, es un nuevo registro, por lo que se limpian los campos del formulario
+                $('#id_prima').val('');
+                $('#nombre').val('');
+                $('#descripcion').val('');
+                $('#cantidad_actual').val('');
+                $('#unidad_medida').val('');
+                $('#fecha_entrada').val('');
+                $('#fecha_caducidad').val('');
+                $('#proveedor').val('');
+                $('#precio_unitario').val('');
+                
+                // Abrir el modal vacío para agregar nueva materia prima
+                $('#modalMateriaPrima').modal('show');
+            }
+        }
+    
+        // Función para abrir el modal de confirmación de eliminación
+        function abrirModalEliminar(id) {
+            $('#confirmarEliminar').attr('data-id', id); // Guardar el ID en el botón de confirmación
+            $('#modalEliminarMateriaPrima').modal('show'); // Abrir el modal de confirmación
+        }
+    
+        // Función para confirmar la eliminación
+        $('#confirmarEliminar').click(function() {
+            var id = $(this).attr('data-id'); // Obtener el ID de la materia prima
+            $.ajax({
+                url: `/materia-prima/eliminar/${id}`, // Ruta para eliminar la materia prima
+                method: 'DELETE',
+                success: function(response) {
+                    // Cerrar el modal y recargar la página para actualizar la tabla
+                    $('#modalEliminarMateriaPrima').modal('hide');
+                    location.reload(); // Recargar la página para ver los cambios
+                },
+                error: function(err) {
+                    console.error('Error al eliminar la materia prima:', err);
+                }
+            });
+        });
+    
+        // Función para guardar o actualizar una materia prima
+        function guardarMateriaPrima() {
+            $.ajax({
+                type: 'POST',
+                url: '/materia-prima/guardar', // Cambiado a /guardar
+                data: {
+                    // Tu payload aquí (ejemplo):
+                    id_prima: $('#id_prima').val(),
+                    nombre: $('#nombre').val(),
+                    descripcion: $('#descripcion').val(),
+                    cantidad_actual: $('#cantidad_actual').val(),
+                    unidad_medida: $('#unidad_medida').val(),
+                    fecha_entrada: $('#fecha_entrada').val(),
+                    fecha_caducidad: $('#fecha_caducidad').val(),
+                    proveedor: $('#proveedor').val(),
+                    precio_unitario: $('#precio_unitario').val()
+                },
+                success: function(response) {
+                    alert('Materia prima guardada exitosamente');
+                    window.location.href = '/materia-prima';
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error al guardar la materia prima:', xhr.responseText);
+                }
+            });
+        }
+
+        function verDetalles(id) {
+            $.ajax({
+                url: `/materia-prima/obtener/${id}`, // Ruta para obtener los detalles
+                method: 'GET',
+                success: function (data) {
+                    // Asignar los datos al contenido del modal
+                    $('#nombreMateria').text(data.nombre);
+                    $('#descripcionMateria').text(data.descripcion);
+                    $('#cantidadMateria').text(data.cantidad_actual);
+                    $('#unidadMateria').text(data.unidad_medida);
+                    $('#fechaEntradaMateria').text(new Date(data.fecha_entrada).toLocaleDateString());
+                    $('#fechaCaducidadMateria').text(new Date(data.fecha_caducidad).toLocaleDateString());
+                    $('#proveedorMateria').text(data.proveedor);
+                    $('#precioMateria').text(data.precio_unitario);
+                
+                    // Mostrar el modal
+                    $('#verModal').modal('show');
+                },
+                error: function (err) {
+                    console.error('Error al obtener los datos de la materia prima:', err);
+                    alert('Hubo un error al obtener los detalles de la materia prima');
+                }
+            });
+        }
+    </script>
+    
+    
+</body>
+</html>
